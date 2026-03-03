@@ -152,6 +152,20 @@ export async function eventsRoutes(app: FastifyInstance) {
       'sitter' in updates &&
       updates.sitter === userId;
 
+    if (isClaimingEvent) {
+      const { data: profile } = await db
+        .from('profiles_private')
+        .select('isHost')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profile?.isHost) {
+        return reply
+          .status(403)
+          .send({ error: 'Hosts cannot claim events' });
+      }
+    }
+
     if (!isHostOfEvent && !isClaimingEvent) {
       return reply
         .status(403)
