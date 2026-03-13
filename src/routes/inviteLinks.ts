@@ -29,6 +29,10 @@ export async function inviteLinksRoutes(app: FastifyInstance) {
       return reply.status(404).send({ error: 'Invite not found' });
     }
 
+    if (new Date(data.expires_at) < new Date()) {
+      return reply.status(410).send({ error: 'Invite link has expired' });
+    }
+
     return data;
   });
 
@@ -43,11 +47,9 @@ export async function inviteLinksRoutes(app: FastifyInstance) {
 
     if (countError) throw countError;
     if ((count ?? 0) >= 5) {
-      return reply
-        .status(429)
-        .send({
-          error: 'Rate limit exceeded. Maximum 5 invite links per hour.',
-        });
+      return reply.status(429).send({
+        error: 'Rate limit exceeded. Maximum 5 invite links per hour.',
+      });
     }
 
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
